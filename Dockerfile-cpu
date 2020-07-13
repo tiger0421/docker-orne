@@ -44,7 +44,7 @@ USER root
 WORKDIR /home/${DOCKER_USER}/catkin_ws/src
 RUN git clone https://github.com/DaikiMaekawa/ypspur.git && \
     wget https://raw.githubusercontent.com/open-rdc/orne_navigation/melodic-devel/orne_pkgs.install && \
-    source /opt/ros/melodic/setup.bash && \
+    bash /opt/ros/melodic/setup.bash && \
     wstool init && \
     wstool merge orne_navigation/orne_pkgs.install && \
     wstool up && \
