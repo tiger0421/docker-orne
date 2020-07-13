@@ -1,0 +1,28 @@
+FROM tiger0421/docker-ros-gpu-gazebo:1.0-glvnd-runtime-ubuntu18.04
+
+# add user
+ARG DOCKER_UID=1000
+ARG DOCKER_USER=docker
+ARG DOCKER_PASSWORD=docker
+RUN useradd -m --uid ${DOCKER_UID} --groups sudo ${DOCKER_USER} \
+  && echo ${DOCKER_USER}:${DOCKER_PASSWORD} | chpasswd
+
+# clone & build
+USER root
+WORKDIR /home/${DOCKER_USER}/catkin_ws/src
+RUN git clone https://github.com/DaikiMaekawa/ypspur.git && \
+    wget https://raw.githubusercontent.com/open-rdc/orne_navigation/melodic-devel/orne_pkgs.install && \
+    source /opt/ros/melodic/setup.bash && \
+    wstool init && \
+    wstool merge orne_navigation/orne_pkgs.install && \
+    wstool up && \
+    rosdep install --from-paths . --ignore-src --rosdistro melodic -y && \
+    catkin build
+RUN chown -R ${DOCKER_USER}:${DOCKER_USER} /home/${DOCKER_USER}/catkin_ws
+
+RUN echo source /home/${DOCKER_USER}/catin_ws/devel/setup.bash >> /home/${DOCKER_USER}/.bashrc
+USER ${DOCKER_USER}
+WORKDIR /home/${DOCKER_USER}
+
+CMD ["/bin/bash"]
+
