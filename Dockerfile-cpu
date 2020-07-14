@@ -1,5 +1,14 @@
 FROM osrf/ros:melodic-desktop-full
 
+USER root
+# add user
+ARG DOCKER_UID=1000
+ARG DOCKER_USER=docker
+ARG DOCKER_PASSWORD=docker
+RUN useradd -m --uid ${DOCKER_UID} --groups sudo ${DOCKER_USER} \
+  && echo ${DOCKER_USER}:${DOCKER_PASSWORD} | chpasswd
+
+WORKDIR /home/${DOCKER_USER}/catkin_ws/src
 ENV DEBIAN_FRONTEND=noninteractive
 RUN sed -i 's#http://tw.archive.ubuntu.com/#http://archive.ubuntu.com/#' /etc/apt/sources.list && \
     apt update && \
@@ -25,36 +34,27 @@ RUN sed -i 's#http://tw.archive.ubuntu.com/#http://archive.ubuntu.com/#' /etc/ap
         python-rosdep \
         python-rosinstall-generator \
         python-wstool \
-        python-rosinstall && \
-    apt upgrade -y && \
-    apt autoremove -y && \
-    apt clean && \
-    rm -rf /var/lib/apt/lists/*
-RUN curl -kL https://bootstrap.pypa.io/get-pip.py | python
-
-# add user
-ARG DOCKER_UID=1000
-ARG DOCKER_USER=docker
-ARG DOCKER_PASSWORD=docker
-RUN useradd -m --uid ${DOCKER_UID} --groups sudo ${DOCKER_USER} \
-  && echo ${DOCKER_USER}:${DOCKER_PASSWORD} | chpasswd
-
-# clone & build
-USER root
-WORKDIR /home/${DOCKER_USER}/catkin_ws/src
-RUN git clone https://github.com/DaikiMaekawa/ypspur.git && \
+        python-rosinstall \
+    && \
+    git clone https://github.com/DaikiMaekawa/ypspur.git && \
     wget https://raw.githubusercontent.com/open-rdc/orne_navigation/melodic-devel/orne_pkgs.install && \
     bash /opt/ros/melodic/setup.bash && \
     wstool init && \
     wstool merge orne_pkgs.install && \
     wstool up && \
     rosdep install --from-paths . --ignore-src --rosdistro melodic -y && \
-    catkin build
+    catkin build && \
+    apt upgrade -y && \
+    apt autoremove -y && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN chown -R ${DOCKER_USER}:${DOCKER_USER} /home/${DOCKER_USER}/catkin_ws
 
 RUN echo source /home/${DOCKER_USER}/catin_ws/devel/setup.bash >> /home/${DOCKER_USER}/.bashrc
 USER ${DOCKER_USER}
 WORKDIR /home/${DOCKER_USER}
 
-CMD ["/bin/bash"]
+RUN curl -kL https://bootstrap.pypa.io/get-pip.py | python
 
+CMD ["/bin/bash"]
