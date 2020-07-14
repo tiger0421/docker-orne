@@ -1,4 +1,4 @@
-FROM tiger0421/ros-gpu-gazebo:1.0-glvnd-runtime-ubuntu18.04
+FROM osrf/ros:melodic-desktop-full
 
 USER root
 # add user
@@ -8,26 +8,59 @@ ARG DOCKER_PASSWORD=docker
 RUN useradd -m --uid ${DOCKER_UID} --groups sudo ${DOCKER_USER} \
   && echo ${DOCKER_USER}:${DOCKER_PASSWORD} | chpasswd
 
+# init workspace
 WORKDIR /home/${DOCKER_USER}/catkin_ws/src
-RUN apt update && \
+ENV DEBIAN_FRONTEND=noninteractive
+RUN /bin/bash -c '. /opt/ros/melodic/setup.bash; catkin_init_workspace'
+
+# install requirements and clone repo
+WORKDIR /home/${DOCKER_USER}/catkin_ws/src
+RUN sed -i 's#http://tw.archive.ubuntu.com/#http://archive.ubuntu.com/#' /etc/apt/sources.list && \
+    apt update && \
+    apt install -y \
+        dpkg \
+        software-properties-common \
+        git \
+        curl \
+        wget \
+        lsb-release \
+        python3-argcomplete \
+        gnupg2 \
+        dirmngr \
+        g++ \
+        fluid \
+        build-essential \
+        vim \
+        tmux \
+    && \
     apt install -y --no-install-recommends \
-        ros-melodic-velodyne && \
+        ros-melodic-velodyne \
+        python-catkin-tools \
+        python-rosdep \
+        python-rosinstall-generator \
+        python-wstool \
+        python-rosinstall \
+    && \
     git clone https://github.com/DaikiMaekawa/ypspur.git && \
     wget https://raw.githubusercontent.com/open-rdc/orne_navigation/melodic-devel/orne_pkgs.install && \
     bash /opt/ros/melodic/setup.bash && \
     wstool init && \
-    wstool merge orne_navigation/orne_pkgs.install && \
+    wstool merge orne_pkgs.install && \
     wstool up && \
     rosdep install --from-paths . --ignore-src --rosdistro melodic -y && \
+    cd .. && \
     catkin build && \
-    chown -R ${DOCKER_USER}:${DOCKER_USER} /home/${DOCKER_USER}/catkin_ws && \
     apt upgrade -y && \
     apt autoremove -y && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
-
+RUN chown -R ${DOCKER_USER}:${DOCKER_USER} /home/${DOCKER_USER}/catkin_ws
 RUN echo source /home/${DOCKER_USER}/catin_ws/devel/setup.bash >> /home/${DOCKER_USER}/.bashrc
+
+RUN curl -kL https://bootstrap.pypa.io/get-pip.py | python
+
 USER ${DOCKER_USER}
 WORKDIR /home/${DOCKER_USER}
+
 
 CMD ["/bin/bash"]
