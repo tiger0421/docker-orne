@@ -46,7 +46,7 @@ RUN git clone https://github.com/DaikiMaekawa/ypspur.git && \
     wget https://raw.githubusercontent.com/open-rdc/orne_navigation/melodic-devel/orne_pkgs.install && \
     bash /opt/ros/melodic/setup.bash && \
     wstool init && \
-    wstool merge orne_navigation/orne_pkgs.install && \
+    wstool merge orne_pkgs.install && \
     wstool up && \
     rosdep install --from-paths . --ignore-src --rosdistro melodic -y && \
     catkin build
