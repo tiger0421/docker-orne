@@ -16,7 +16,7 @@ RUN apt update && \
     git clone https://github.com/openspur/yp-spur.git && \
     wstool init && \
     wstool merge orne_pkgs.install && \
-    wstool up && \
+    wstool up \
     && \
     source /opt/ros/melodic/setup.bash && \
     cd /root/catkin_ws && \
