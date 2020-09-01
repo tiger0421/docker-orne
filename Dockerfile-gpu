@@ -1,7 +1,5 @@
 FROM tiger0421/ros-gpu-gazebo:1.0-glvnd-runtime-ubuntu18.04
 
-RUN 
-
 WORKDIR /root/catkin_ws
 RUN echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc && \
     bash -c "source ~/.bashrc" && \
